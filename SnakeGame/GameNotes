@@ -1,3 +1,4 @@
+
 Classic game of Snake
 A snake continuously moves around the board facing a given direction. 
 Any time the user presses the up, down, left or right arrow on the keyboard, the snake
