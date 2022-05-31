@@ -1,0 +1,354 @@
+/*
+Allison Cheng
+Snake Game: snake continuously moves around board facing a given direction,
+anytime user presses up, down, left, or right arrow on the keyboard,
+the snake changes direction, generates random position for apple as long as snake ont occupied by snake
+ */
+
+import javax.swing.*;
+import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
+
+import javax.swing.Timer;
+import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+
+public class AllisonSnakeGame extends JFrame implements KeyListener {
+
+    public enum DIR {UP, DOWN, LEFT, RIGHT};
+    private final int DIM = 15;
+
+    private int numApples = 0;
+    private PicPanel allPanels[][];
+    private Snake theSnake;
+    private Location appleLoc;
+    private Timer timer;
+
+    public AllisonSnakeGame() {
+
+        setSize(600,600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        getContentPane().setBackground(Color.black);
+        setLayout(new GridLayout(DIM,DIM,3,3));
+        allPanels = new PicPanel[DIM][DIM];
+
+        for(int row = 0; row < DIM; row++) {
+            for(int col = 0; col < DIM; col++) {
+                allPanels[row][col] = new PicPanel();
+                allPanels[row][col].setBackground(Color.white);
+                add(allPanels[row][col]);
+            }
+        }
+
+        //create the snake, apple and set up the timer
+        //YOUR CODE GOES HERE
+        theSnake = new Snake();
+
+        genApple();
+        timer = new Timer(300, new ActionListener(){
+
+            public void actionPerformed(ActionEvent arg0) {
+                theSnake.move();
+            }
+        });
+        addKeyListener(this);
+        setVisible(true);
+    }
+
+    public void genApple() {
+        while(true) {
+            int randNum1 = (int) (Math.random() * DIM);
+            int randNum2 = (int) (Math.random() * DIM);
+
+            appleLoc = new Location(randNum1, randNum2);
+            boolean isValid = true;
+            for (int i = 0; i < theSnake.snakeLocs.size(); i++) {
+                if (appleLoc.equals(theSnake.snakeLocs.get(i))) {
+                    isValid = false;
+                }
+            }
+            if (isValid) {
+                allPanels[appleLoc.row][appleLoc.col].changePic("snake_images/apple.png");
+                return;
+            }
+        }
+    }
+
+    public class Snake {
+
+        private ArrayList<Location> snakeLocs;  // head of snake is always at spot 0 in the AL
+        private DIR snakeDIR = DIR.DOWN;		//current dir the snake head is facing
+        private DIR prevDIR = DIR.DOWN;		// last dir snake was facing (used to draw the neck correctly)
+
+        public Snake() {
+
+            //initialize four tiles to the appropriate location
+            snakeLocs = new ArrayList<Location>();
+            int startRow = 4;
+            int startCol = 4;
+
+            //add the head of the snake
+            snakeLocs.add(new Location(startRow,startCol));
+            allPanels[startRow][startCol].changePic("snake_images/head_down.png");
+
+            //add the body (assuming an initial length of 4)
+            for(int i = 1; i <= 3; i++) {
+                snakeLocs.add(new Location(startRow-i,startCol));
+                allPanels[startRow-i][startCol].changePic("snake_images/body_vert.png");
+            }
+
+            changeTail();
+
+            prevDIR = snakeDIR;
+        }
+
+        public void move() {
+
+            //YOUR CODE GOES HERE
+            //attempts to move the snake in the direction it's currently facing
+            Location headLoc = new Location(snakeLocs.get(0).row, snakeLocs.get(0).col);
+            if (snakeDIR == DIR.UP) {
+                headLoc.row--;
+            }
+            else if (snakeDIR == DIR.DOWN) {
+                headLoc.row++;
+            }
+            else if (snakeDIR == DIR.LEFT) {
+                headLoc.col--;
+            }
+            else if (snakeDIR == DIR.RIGHT) {
+                headLoc.col++;
+            }
+
+            //detects if the game is over
+
+            // if snake head hits bounds
+            if (headLoc.row == DIM || headLoc.col == DIM || headLoc.row < 0 || headLoc.col < 0) {
+                gameOver();
+            }
+
+            // if snake touches itself
+            for (int i = 0; i < snakeLocs.size(); i++) {
+                if (headLoc.equals(snakeLocs.get(i))) {
+                    gameOver();
+                }
+            }
+            //otherwise checks to see if its eaten an apple
+            if (headLoc.equals(appleLoc)) {
+                numApples++;
+                genApple();
+                //make snake bigger
+                snakeLocs.add(2 , snakeLocs.get(1));
+            }
+            //adds a new location representing the head of the snake
+            //and removes the last loc of the snake
+            Location tailLoc = snakeLocs.get(snakeLocs.size() - 1);
+            allPanels[tailLoc.row][tailLoc.col].changePic("");
+            for (int i = snakeLocs.size() -1; i > 0; i--) {
+                snakeLocs.set(i, snakeLocs.get(i-1));
+            }
+            snakeLocs.set(0, headLoc);
+
+            //updates the neck image as necessary and which location should be the tail
+            //updates the previous and current direction of the snake
+            changeHead();
+            changeNeck();
+            changeTail();
+
+            prevDIR = snakeDIR;
+        }
+
+        // after game over, message of number of apples eaten pops up
+        public void gameOver() {
+            String message = "Apples Eaten: " + numApples;
+            JOptionPane.showMessageDialog(null, message);
+        }
+
+        // changes head position depending on position
+        private void changeHead() {
+            Location headLoc = snakeLocs.get(0);
+            if(snakeDIR == DIR.UP) {
+                allPanels[headLoc.row][headLoc.col].changePic("snake_images/head_up.png");
+            }
+            else if (snakeDIR == DIR.DOWN) {
+                allPanels[headLoc.row][headLoc.col].changePic("snake_images/head_down.png");
+            }
+            else if (snakeDIR == DIR.LEFT) {
+                allPanels[headLoc.row][headLoc.col].changePic("snake_images/head_left.png");
+            }
+            else if (snakeDIR == DIR.RIGHT) {
+                allPanels[headLoc.row][headLoc.col].changePic("snake_images/head_right.png");
+            }
+        }
+
+        //determine which pic to draw for the tail and update the image (as necessary)
+        private void changeTail() {
+            Location tailLoc = snakeLocs.get(snakeLocs.size()-1);
+            Location spotBefore = snakeLocs.get(snakeLocs.size()-2);
+
+            String tailPic = "";
+
+            if(tailLoc.row == spotBefore.row) {
+                if(tailLoc.col < spotBefore.col)
+                    tailPic = "snake_images/tail_left.png";
+                else
+                    tailPic = "snake_images/tail_right.png";
+            }
+            else {
+                if(tailLoc.row<spotBefore.row)
+                    tailPic = "snake_images/tail_up.png";
+                else
+                    tailPic = "snake_images/tail_down.png";
+            }
+
+            allPanels[tailLoc.row][tailLoc.col].changePic(tailPic);
+        }
+
+        //changes the image of the neck based off of previous and current direction of the snake
+        private void changeNeck() {
+            Location headLoc = snakeLocs.get(0);
+            Location neckLoc = snakeLocs.get(1);
+
+            String neckPic = "";
+
+            if(prevDIR == snakeDIR) {
+                if(headLoc.row == neckLoc.row)
+                    neckPic = "snake_images/body_horz.png";
+                else
+                    neckPic = "snake_images/body_vert.png";
+            }
+
+            else if(snakeDIR == DIR.UP) {
+                if(prevDIR == DIR.RIGHT)
+                    neckPic = "snake_images/right_up.png";
+                else
+                    neckPic = "snake_images/left_up.png";
+            }
+            else if(snakeDIR == DIR.DOWN) {
+                if(prevDIR == DIR.LEFT) {
+                    neckPic = "snake_images/left_down.png";
+                }
+                else
+                    neckPic = "snake_images/right_down.png";
+            }
+            else if(snakeDIR == DIR.RIGHT) {
+                if(prevDIR == DIR.UP) {
+                    neckPic = "snake_images/left_down.png";
+                }
+                else
+                    neckPic = "snake_images/left_up.png";
+            }
+            else  {
+                if(prevDIR == DIR.UP) {
+                    neckPic = "snake_images/right_down.png";
+                }
+                else
+                    neckPic = "snake_images/right_up.png";
+            }
+
+            allPanels[neckLoc.row][neckLoc.col].changePic(neckPic);
+        }
+    }
+
+    //updates the previous and current direction of the snake based off of arrow key press
+    @Override
+    public void keyPressed(KeyEvent arg0) {
+        //starts the timer if the space bar pressed
+        int keyCode = arg0.getKeyCode();
+        if(keyCode == KeyEvent.VK_SPACE){
+            timer.start();
+            return;
+        }
+
+        if(keyCode == KeyEvent.VK_LEFT){
+            theSnake.snakeDIR = DIR.LEFT;
+        }
+        else if(keyCode == KeyEvent.VK_RIGHT){
+            theSnake.snakeDIR = DIR.RIGHT;
+        }
+        else if(keyCode == KeyEvent.VK_UP){
+            theSnake.snakeDIR = DIR.UP;
+        }
+        else if(keyCode == KeyEvent.VK_DOWN){
+            theSnake.snakeDIR = DIR.DOWN;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent arg0) {
+        // DO NOT IMPLEMENT
+    }
+
+    @Override
+    public void keyTyped(KeyEvent arg0) {
+        // DO NOT IMPLEMENT
+    }
+
+    public class Location {
+        private int row;
+        private int col;
+
+        public Location(int r, int c) {
+            row = r;
+            col = c;
+        }
+        
+        public boolean equals(Location other) {
+            if (this.row == other.row && this.col == other.col) {
+                return true;
+            }
+            return false;
+        }
+
+        public String toString() {
+            return row + ", " + col;
+        }
+    }
+
+    public class PicPanel extends JPanel{
+
+        private BufferedImage image;
+
+        public PicPanel() {
+
+        }
+
+        public PicPanel(String fname){
+            changePic(fname);
+        }
+
+        //places an image in a given panel or clears one out if "" is passed in instead
+        public void changePic(String fname) {
+
+            if(fname.equals("")) {
+                image = null;
+
+            }
+            else {
+                //reads the image
+                try {
+                    image = ImageIO.read(new File(fname));
+
+                } catch (IOException ioe) {
+                    System.out.println("Could not read in the pic: "+fname);
+                    System.exit(0);
+                }
+            }
+            this.repaint();
+        }
+
+        //this will draw the image
+        public void paintComponent(Graphics g){
+            super.paintComponent(g);
+            if(image !=null)
+                g.drawImage(image,0,0,this);
+        }
+    }
+
+    public static void main(String[] args) {
+        new AllisonSnakeGame();
+    }
+}
