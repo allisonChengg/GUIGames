@@ -1,0 +1,22 @@
+The user gets a total of five attempts to guess a five letter word.
+When the user makes a guess, the background color of a letter will change to either green, yellow or
+grey. Green indicates that the letter is in the word and in the correct spot. Yellow indicates that the
+letter is in the word but is not in the correct location and grey indicates that the letter is not in the word at all
+
+Input:
+All input for this GUI will come from listening to keystrokes. Any time a letter is inputted, panels within
+a row will update from left to right. 
+Once five letters have been inputted, any additional letters will be
+ignored until the user submits their word as a guess. Initially the top row is filled in. After they submit a
+guess, then row 1 is filled in and so forth.
+If the user presses the backspace key, then their most recently entered letter will be erased and pressing
+a letter will fill in the location of the most recently deleted letter. Backspace key input should be
+discarded if no letters are present within the current row.
+When the user presses the enter key, they are signaling that they want to submit all five letters from the
+current row of input as a guess. If they press the enter key prior to five letters being inputted within the
+current row, it should simply be ignored (discarded). If the user’s guess is not a real 5 letter word, a
+message box should pop up informing them and that word should not be submitted as a guess.
+When the user submits a guess that is a real word, you will convert the panels in that row to either
+green, yellow or grey as described above.
+If the user guesses the word correctly, the key listener should be removed to indicate that no additional attempts
+are allowed
