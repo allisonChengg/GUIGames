@@ -1,7 +1,7 @@
-/* Allison Cheng & Gloria Jeng
+
+/* Gloria Jeng Allison Cheng 
  * A replication of Othello 
  */
-
 import java.awt.*;
 
 import javax.imageio.ImageIO;
@@ -87,7 +87,6 @@ public class GloriaAllisonOthello extends JFrame implements ActionListener {
 		add(whiteCountLabel);
 		add(turnLabel);
 
-		// YOUR CODE GOES HERE
 		// insert four initial pieces
 		allPanels[3][3].addPiece(Color.WHITE);
 		allPanels[3][4].addPiece(Color.BLACK);
@@ -115,6 +114,8 @@ public class GloriaAllisonOthello extends JFrame implements ActionListener {
 		return row >= 0 && row < allPanels.length && col >= 0 && col < allPanels.length;
 	}
 
+	// when "skip turn" is clicked, the turn is given to the other player and the
+	// turn label is updated
 	public void actionPerformed(ActionEvent ae) {
 		blackTurn = !blackTurn;
 		updateLabels();
@@ -197,28 +198,30 @@ public class GloriaAllisonOthello extends JFrame implements ActionListener {
 			repaint();
 		}
 
-		// add code here to react to the user clicking on the panel
+		// reacts to the user clicking on the panel
 		public void mouseClicked(MouseEvent me) {
-			// YOUR CODE GOES HERE
 
-			// System.out.println("first condition " + isValidCell(this.row, this.col));
-			// System.out.print("Second ");
-			// System.out.println(allPanels[this.row][this.col].myColor==null);
-
+			// check if what they clicked is a valid spot
 			if (isValidCell(this.row, this.col) && allPanels[this.row][this.col].myColor == null) {
 
 				neighbors = adjacent(this.row, this.col);
 				if (neighbors.size() != 0) {
-					// System.out.print("here" + neighbors.size());
+					// flip pieces and add their current move to the board, updates the piece
+					// counters and changes to other player's turn
 					if (validMoveAndFlip(this.row, this.col)) {
 						this.addPiece(myColor);
 						blackTurn = !blackTurn;
 						updateLabels();
-					} else {
+					}
+					// if they clicked a spot with an adjacent piece but a piece of the opponents
+					// color can't be flipped
+					else {
 						displayMessage("Can not flip a piece");
 					}
 
-				} else {
+				}
+				// clicked a spot with no adjacent pieces
+				else {
 					displayMessage("Can not move here, no adjacent piece");
 				}
 
@@ -240,13 +243,13 @@ public class GloriaAllisonOthello extends JFrame implements ActionListener {
 			}
 
 			boolean goodMove = false;
-			int flipCount = 0;
 
+			// loop through neighbors array and check every direction that has a neighbor
 			for (int i = 0; i < neighbors.size(); i++) {
+				int flipCount = 0;
 				int next_r = r + HORZDISP[neighbors.get(i)];
 				int next_c = c + VERTDISP[neighbors.get(i)];
 				ArrayList<int[]> track = new ArrayList<int[]>();
-				flipCount = 0;
 				while (isValidCell(next_r, next_c) && allPanels[next_r][next_c].myColor != null
 						&& allPanels[next_r][next_c].myColor.equals(opsColor)) {
 					int point[] = { next_r, next_c };
@@ -255,33 +258,39 @@ public class GloriaAllisonOthello extends JFrame implements ActionListener {
 					next_c += VERTDISP[neighbors.get(i)];
 				}
 
-				// flip
+				// flip pieces if it is a valid move.
 				if (isValidCell(next_r, next_c) && allPanels[next_r][next_c].myColor != null
 						&& allPanels[next_r][next_c].myColor.equals(myColor) && track.size() != 0) {
-					
 					for (int j = 0; j < track.size(); j++) {
-						// System.out.print(track.get(j)[0]+" flip "+track.get(j)[1]);
 						allPanels[track.get(j)[0]][track.get(j)[1]].flip();
+						// count how many pieces are flipped
 						flipCount++;
 					}
+
+					// update counters based on how many pieces was flipped
 					if (myColor.equals(Color.BLACK)) {
 						blackCount += flipCount;
 						whiteCount -= flipCount;
 					} else {
 						whiteCount += flipCount;
 						blackCount -= flipCount;
+
 					}
 					goodMove = true;
+
 				}
+
 			}
+			// if it is a good move, add another to pieceCount (depending on what color you
+			// are) to account for the added piece
 			if (goodMove) {
 				if (myColor.equals(Color.BLACK)) {
-					blackCount+=1;
-				}
-				else {
-					whiteCount+=1;
+					blackCount += 1;
+				} else {
+					whiteCount += 1;
 				}
 			}
+			// reset color to null
 			else {
 				myColor = null;
 			}
@@ -289,11 +298,11 @@ public class GloriaAllisonOthello extends JFrame implements ActionListener {
 
 		}
 
-		// find neighboring pieces
+		// find neighboring pieces for a certain pic panel
 		private ArrayList<Integer> adjacent(int r, int c) {
 			ArrayList<Integer> a = new ArrayList<Integer>();
 			for (int i = 0; i < VERTDISP.length; i++) {
-				// if neighbor, add to arrayList
+				// if there's neighbor, add to arrayList
 				if (isValidCell(r + HORZDISP[i], c + VERTDISP[i])
 						&& allPanels[r + HORZDISP[i]][c + VERTDISP[i]].myColor != null) {
 					a.add(i);
